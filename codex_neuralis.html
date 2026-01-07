@@ -1,0 +1,1689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Codex Neuralis — The Letterbox</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Crimson+Text:ital@0;1&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --burnt-umber: #2C1810;
+            --travertine: #8B7355;
+            --travertine-light: #C4A574;
+            --gold-leaf: #D4AF37;
+            --vermilion: #8B0000;
+            --verdigris: #3D5C3A;
+            --parchment: #F5E6D3;
+            --parchment-dark: #E8D4BC;
+            --ink: #1a1a1a;
+            --shadow: rgba(44, 24, 16, 0.3);
+            --glow: rgba(212, 175, 55, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Crimson Text', Georgia, serif;
+            background: var(--parchment);
+            color: var(--burnt-umber);
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Cellular Automata Canvas - Living Border */
+        #automata-border {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.12;
+        }
+
+        /* Main Container */
+        .codex-container {
+            position: relative;
+            z-index: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        /* Header - Renaissance Cartouche */
+        .codex-header {
+            text-align: center;
+            padding: 3rem 2rem;
+            margin-bottom: 2rem;
+            position: relative;
+            background: linear-gradient(
+                to bottom,
+                transparent 0%,
+                var(--glow) 20%,
+                var(--glow) 80%,
+                transparent 100%
+            );
+        }
+
+        .codex-header::before,
+        .codex-header::after {
+            content: '✦';
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5rem;
+            color: var(--gold-leaf);
+            opacity: 0.6;
+        }
+
+        .codex-header::before { left: 10%; }
+        .codex-header::after { right: 10%; }
+
+        .codex-title {
+            font-family: 'Cormorant Garamond', Garamond, serif;
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--burnt-umber);
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px var(--shadow);
+        }
+
+        .codex-subtitle {
+            font-family: 'IM Fell English', Georgia, serif;
+            font-style: italic;
+            font-size: 1.2rem;
+            color: var(--travertine);
+            letter-spacing: 0.1em;
+        }
+
+        /* Navigation Tabs */
+        .codex-nav {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 3rem;
+            flex-wrap: wrap;
+        }
+
+        .nav-tab {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            padding: 0.75rem 2rem;
+            background: transparent;
+            border: 2px solid var(--travertine);
+            color: var(--burnt-umber);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-tab::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, var(--gold-leaf), transparent);
+            opacity: 0.3;
+            transition: left 0.5s ease;
+        }
+
+        .nav-tab:hover::before {
+            left: 100%;
+        }
+
+        .nav-tab:hover {
+            border-color: var(--gold-leaf);
+            color: var(--gold-leaf);
+        }
+
+        .nav-tab.active {
+            background: var(--burnt-umber);
+            color: var(--parchment);
+            border-color: var(--burnt-umber);
+        }
+
+        /* Panels */
+        .panel {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Section Headers */
+        .section-header {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--burnt-umber);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--travertine-light);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .section-header::before {
+            content: '§';
+            color: var(--gold-leaf);
+            font-size: 1.5rem;
+        }
+
+        /* Cards - Fresco Panels */
+        .fresco-card {
+            background: linear-gradient(
+                135deg,
+                var(--parchment) 0%,
+                var(--parchment-dark) 50%,
+                var(--parchment) 100%
+            );
+            border: 1px solid var(--travertine-light);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            position: relative;
+            box-shadow: 
+                4px 4px 12px var(--shadow),
+                inset 0 0 30px rgba(255,255,255,0.5);
+        }
+
+        .fresco-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(
+                90deg,
+                var(--burnt-umber),
+                var(--gold-leaf),
+                var(--burnt-umber)
+            );
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--burnt-umber);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            font-family: 'Crimson Text', serif;
+            font-size: 1rem;
+            color: var(--ink);
+            background: var(--parchment);
+            border: 1px solid var(--travertine);
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--gold-leaf);
+            box-shadow: 0 0 0 3px var(--glow);
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        /* Reading Modality Selection */
+        .modality-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .modality-option {
+            position: relative;
+        }
+
+        .modality-option input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .modality-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+            border: 2px solid var(--travertine-light);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .modality-label:hover {
+            border-color: var(--gold-leaf);
+        }
+
+        .modality-option input:checked + .modality-label {
+            background: var(--burnt-umber);
+            color: var(--parchment);
+            border-color: var(--burnt-umber);
+        }
+
+        .modality-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .modality-name {
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        /* Attention Slider */
+        .attention-slider {
+            width: 100%;
+            height: 8px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: linear-gradient(
+                to right,
+                var(--vermilion),
+                var(--gold-leaf),
+                var(--verdigris)
+            );
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .attention-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            background: var(--parchment);
+            border: 3px solid var(--burnt-umber);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 6px var(--shadow);
+        }
+
+        .attention-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--travertine);
+            margin-top: 0.5rem;
+        }
+
+        /* Buttons */
+        .btn {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            padding: 0.75rem 2rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .btn-primary {
+            background: var(--burnt-umber);
+            color: var(--parchment);
+        }
+
+        .btn-primary:hover {
+            background: var(--gold-leaf);
+            color: var(--burnt-umber);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--burnt-umber);
+            border: 2px solid var(--burnt-umber);
+        }
+
+        .btn-secondary:hover {
+            background: var(--burnt-umber);
+            color: var(--parchment);
+        }
+
+        .btn-danger {
+            background: var(--vermilion);
+            color: var(--parchment);
+        }
+
+        /* Book Library Grid */
+        .library-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .book-card {
+            background: var(--parchment);
+            border: 1px solid var(--travertine-light);
+            padding: 1.5rem;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .book-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px var(--shadow);
+        }
+
+        .book-card.selected {
+            border-color: var(--gold-leaf);
+            box-shadow: 0 0 0 3px var(--glow);
+        }
+
+        .book-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--burnt-umber);
+            margin-bottom: 0.25rem;
+        }
+
+        .book-author {
+            font-style: italic;
+            color: var(--travertine);
+            margin-bottom: 1rem;
+        }
+
+        .book-stats {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.9rem;
+            color: var(--travertine);
+        }
+
+        .book-stat {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .book-progress {
+            height: 4px;
+            background: var(--travertine-light);
+            margin-top: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .book-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--verdigris), var(--gold-leaf));
+            transition: width 0.5s ease;
+        }
+
+        /* Reading Session List */
+        .session-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .session-item {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 1rem;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid var(--travertine-light);
+            transition: background 0.3s ease;
+        }
+
+        .session-item:hover {
+            background: var(--glow);
+        }
+
+        .session-book {
+            font-weight: 600;
+        }
+
+        .session-details {
+            font-size: 0.9rem;
+            color: var(--travertine);
+        }
+
+        .session-modality {
+            padding: 0.25rem 0.75rem;
+            font-size: 0.8rem;
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .modality-deep { background: var(--verdigris); color: var(--parchment); }
+        .modality-standard { background: var(--travertine); color: var(--parchment); }
+        .modality-skim { background: var(--gold-leaf); color: var(--burnt-umber); }
+        .modality-browse { background: var(--vermilion); color: var(--parchment); }
+
+        /* Stats Dashboard */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--parchment);
+            border: 1px solid var(--travertine-light);
+            padding: 1.5rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gold-leaf);
+        }
+
+        .stat-value {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--burnt-umber);
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--travertine);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-top: 0.5rem;
+        }
+
+        /* Visualization Canvas */
+        .viz-container {
+            background: var(--burnt-umber);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .viz-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.2rem;
+            color: var(--gold-leaf);
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        #reading-viz {
+            width: 100%;
+            height: 200px;
+            display: block;
+        }
+
+        /* Modality Breakdown */
+        .modality-breakdown {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .modality-stat {
+            text-align: center;
+            padding: 1rem;
+            border: 1px solid var(--travertine-light);
+        }
+
+        .modality-stat-value {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .modality-stat-label {
+            font-size: 0.85rem;
+            color: var(--travertine);
+        }
+
+        /* Reading Brain Age Display */
+        .brain-age-display {
+            text-align: center;
+            padding: 3rem;
+            background: linear-gradient(
+                135deg,
+                var(--burnt-umber) 0%,
+                #3d2a1f 100%
+            );
+            color: var(--parchment);
+            margin-bottom: 2rem;
+        }
+
+        .brain-age-label {
+            font-family: 'IM Fell English', serif;
+            font-style: italic;
+            font-size: 1rem;
+            color: var(--travertine-light);
+            margin-bottom: 0.5rem;
+        }
+
+        .brain-age-value {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 5rem;
+            font-weight: 700;
+            color: var(--gold-leaf);
+            line-height: 1;
+        }
+
+        .brain-age-unit {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            color: var(--travertine-light);
+        }
+
+        .brain-age-delta {
+            margin-top: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .delta-positive { color: var(--verdigris); }
+        .delta-negative { color: var(--vermilion); }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--travertine);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state-text {
+            font-family: 'IM Fell English', serif;
+            font-style: italic;
+            font-size: 1.2rem;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 2rem;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--parchment);
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            animation: modalIn 0.3s ease;
+        }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-header {
+            padding: 1.5rem 2rem;
+            background: var(--burnt-umber);
+            color: var(--parchment);
+        }
+
+        .modal-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            color: var(--parchment);
+            font-size: 1.5rem;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+
+        .modal-close:hover {
+            opacity: 1;
+        }
+
+        /* Footer Quote */
+        .codex-footer {
+            text-align: center;
+            padding: 3rem;
+            margin-top: 4rem;
+            border-top: 1px solid var(--travertine-light);
+        }
+
+        .footer-quote {
+            font-family: 'IM Fell English', serif;
+            font-style: italic;
+            font-size: 1.1rem;
+            color: var(--travertine);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .footer-attribution {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--travertine-light);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .codex-container {
+                padding: 1rem;
+            }
+
+            .fresco-card {
+                padding: 1.5rem;
+            }
+
+            .modality-breakdown {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .session-item {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--parchment-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--travertine);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--burnt-umber);
+        }
+
+        /* Two-column layout for forms */
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        /* Session form book selector */
+        .book-selector {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid var(--travertine-light);
+            margin-bottom: 1.5rem;
+        }
+
+        .book-selector-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            border-bottom: 1px solid var(--travertine-light);
+        }
+
+        .book-selector-item:last-child {
+            border-bottom: none;
+        }
+
+        .book-selector-item:hover {
+            background: var(--glow);
+        }
+
+        .book-selector-item.selected {
+            background: var(--burnt-umber);
+            color: var(--parchment);
+        }
+
+        /* Time input styling */
+        input[type="time"], input[type="date"], input[type="number"] {
+            font-family: 'Crimson Text', serif;
+        }
+    </style>
+</head>
+<body>
+    <!-- Cellular Automata Background -->
+    <canvas id="automata-border"></canvas>
+
+    <div class="codex-container">
+        <!-- Header -->
+        <header class="codex-header">
+            <h1 class="codex-title">Codex Neuralis</h1>
+            <p class="codex-subtitle">A Computational Instrument for Reading Brain Cultivation</p>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="codex-nav">
+            <button class="nav-tab active" data-panel="dashboard">Dashboard</button>
+            <button class="nav-tab" data-panel="library">Library</button>
+            <button class="nav-tab" data-panel="session">Log Session</button>
+            <button class="nav-tab" data-panel="history">History</button>
+        </nav>
+
+        <!-- Dashboard Panel -->
+        <section id="dashboard" class="panel active">
+            <!-- Reading Brain Age -->
+            <div class="brain-age-display">
+                <div class="brain-age-label">Your Reading Brain Age</div>
+                <div class="brain-age-value" id="brain-age">—</div>
+                <div class="brain-age-unit">cognitive years</div>
+                <div class="brain-age-delta" id="brain-age-delta"></div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-books">0</div>
+                    <div class="stat-label">Books in Library</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-sessions">0</div>
+                    <div class="stat-label">Reading Sessions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-pages">0</div>
+                    <div class="stat-label">Pages Read</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-hours">0</div>
+                    <div class="stat-label">Hours Read</div>
+                </div>
+            </div>
+
+            <!-- Reading Visualization -->
+            <div class="viz-container">
+                <div class="viz-title">Reading Activity — Last 30 Days</div>
+                <canvas id="reading-viz"></canvas>
+            </div>
+
+            <!-- Modality Breakdown -->
+            <div class="fresco-card">
+                <h2 class="section-header">Reading Modality Distribution</h2>
+                <div class="modality-breakdown">
+                    <div class="modality-stat">
+                        <div class="modality-stat-value" id="mod-deep" style="color: var(--verdigris)">0%</div>
+                        <div class="modality-stat-label">Deep Reading</div>
+                    </div>
+                    <div class="modality-stat">
+                        <div class="modality-stat-value" id="mod-standard" style="color: var(--travertine)">0%</div>
+                        <div class="modality-stat-label">Standard</div>
+                    </div>
+                    <div class="modality-stat">
+                        <div class="modality-stat-value" id="mod-skim" style="color: var(--gold-leaf)">0%</div>
+                        <div class="modality-stat-label">Skim Reading</div>
+                    </div>
+                    <div class="modality-stat">
+                        <div class="modality-stat-value" id="mod-browse" style="color: var(--vermilion)">0%</div>
+                        <div class="modality-stat-label">Browse</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Library Panel -->
+        <section id="library" class="panel">
+            <div class="fresco-card">
+                <h2 class="section-header">Add to Library</h2>
+                <form id="add-book-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="book-title">Title</label>
+                            <input type="text" id="book-title" class="form-input" required placeholder="Enter book title">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="book-author">Author</label>
+                            <input type="text" id="book-author" class="form-input" required placeholder="Enter author name">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="book-pages">Total Pages</label>
+                            <input type="number" id="book-pages" class="form-input" min="1" placeholder="Optional">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="book-genre">Genre</label>
+                            <select id="book-genre" class="form-select">
+                                <option value="fiction">Fiction</option>
+                                <option value="non-fiction">Non-Fiction</option>
+                                <option value="philosophy">Philosophy</option>
+                                <option value="science">Science</option>
+                                <option value="poetry">Poetry</option>
+                                <option value="history">History</option>
+                                <option value="biography">Biography</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add to Library</button>
+                </form>
+            </div>
+
+            <h2 class="section-header">Your Library</h2>
+            <div id="library-grid" class="library-grid">
+                <!-- Books will be rendered here -->
+            </div>
+        </section>
+
+        <!-- Log Session Panel -->
+        <section id="session" class="panel">
+            <div class="fresco-card">
+                <h2 class="section-header">Log Reading Session</h2>
+                <form id="session-form">
+                    <div class="form-group">
+                        <label class="form-label">Select Book</label>
+                        <div id="book-selector" class="book-selector">
+                            <!-- Books will be rendered here -->
+                        </div>
+                        <input type="hidden" id="session-book-id" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="session-pages">Pages Read</label>
+                            <input type="number" id="session-pages" class="form-input" min="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="session-duration">Duration (minutes)</label>
+                            <input type="number" id="session-duration" class="form-input" min="1" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Reading Modality</label>
+                        <div class="modality-grid">
+                            <div class="modality-option">
+                                <input type="radio" name="modality" id="mod-deep-input" value="deep" required>
+                                <label for="mod-deep-input" class="modality-label">
+                                    <span class="modality-icon">🔮</span>
+                                    <span class="modality-name">Deep</span>
+                                </label>
+                            </div>
+                            <div class="modality-option">
+                                <input type="radio" name="modality" id="mod-standard-input" value="standard">
+                                <label for="mod-standard-input" class="modality-label">
+                                    <span class="modality-icon">📖</span>
+                                    <span class="modality-name">Standard</span>
+                                </label>
+                            </div>
+                            <div class="modality-option">
+                                <input type="radio" name="modality" id="mod-skim-input" value="skim">
+                                <label for="mod-skim-input" class="modality-label">
+                                    <span class="modality-icon">⚡</span>
+                                    <span class="modality-name">Skim</span>
+                                </label>
+                            </div>
+                            <div class="modality-option">
+                                <input type="radio" name="modality" id="mod-browse-input" value="browse">
+                                <label for="mod-browse-input" class="modality-label">
+                                    <span class="modality-icon">👁</span>
+                                    <span class="modality-name">Browse</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Attention Quality</label>
+                        <input type="range" id="session-attention" class="attention-slider" min="0" max="100" value="50">
+                        <div class="attention-labels">
+                            <span>Scattered</span>
+                            <span>Focused</span>
+                            <span>Flow State</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="session-notes">Notes (optional)</label>
+                        <textarea id="session-notes" class="form-textarea" placeholder="Any thoughts, insights, or memorable passages..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Log Session</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- History Panel -->
+        <section id="history" class="panel">
+            <div class="fresco-card">
+                <h2 class="section-header">Reading History</h2>
+                <div id="session-list" class="session-list">
+                    <!-- Sessions will be rendered here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="codex-footer">
+            <p class="footer-quote">"The screen is both window and mirror. We are no longer subjects but projects."</p>
+            <p class="footer-attribution">— Vilém Flusser</p>
+        </footer>
+    </div>
+
+    <!-- Book Detail Modal -->
+    <div id="book-modal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modal-book-title">Book Title</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="modal-book-author" style="font-style: italic; color: var(--travertine); margin-bottom: 1rem;"></p>
+                <div id="modal-book-stats" style="margin-bottom: 2rem;"></div>
+                <div id="modal-book-sessions"></div>
+                <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+                    <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+                    <button class="btn btn-danger" id="delete-book-btn">Remove from Library</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CODEX NEURALIS - The Letterbox
+        // A Computational Instrument for Reading Brain Cultivation
+        // ============================================
+
+        // Data Store
+        const STORAGE_KEY = 'codex_neuralis_data';
+
+        function loadData() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                return JSON.parse(stored);
+            }
+            return {
+                books: [],
+                sessions: [],
+                userProfile: {
+                    createdAt: new Date().toISOString(),
+                    chronologicalAge: null
+                }
+            };
+        }
+
+        function saveData(data) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        let appData = loadData();
+
+        // ============================================
+        // CELLULAR AUTOMATA - Living Border
+        // ============================================
+
+        const automataCanvas = document.getElementById('automata-border');
+        const actx = automataCanvas.getContext('2d');
+
+        function initAutomata() {
+            automataCanvas.width = window.innerWidth;
+            automataCanvas.height = window.innerHeight;
+        }
+
+        // Rule 110 - Turing complete cellular automaton
+        function rule110(left, center, right) {
+            const pattern = (left << 2) | (center << 1) | right;
+            const rule = 110; // 01101110 in binary
+            return (rule >> pattern) & 1;
+        }
+
+        let automataState = [];
+        let automataGeneration = 0;
+
+        function initAutomataState() {
+            const width = Math.ceil(automataCanvas.width / 4);
+            automataState = new Array(width).fill(0);
+            // Seed with single cell or random
+            automataState[Math.floor(width / 2)] = 1;
+            // Add some randomness
+            for (let i = 0; i < width; i++) {
+                if (Math.random() < 0.01) automataState[i] = 1;
+            }
+            automataGeneration = 0;
+        }
+
+        function stepAutomata() {
+            const width = automataState.length;
+            const newState = new Array(width).fill(0);
+            
+            for (let i = 0; i < width; i++) {
+                const left = automataState[(i - 1 + width) % width];
+                const center = automataState[i];
+                const right = automataState[(i + 1) % width];
+                newState[i] = rule110(left, center, right);
+            }
+            
+            automataState = newState;
+            automataGeneration++;
+        }
+
+        function renderAutomata() {
+            const cellSize = 4;
+            const height = automataCanvas.height;
+            
+            // Shift existing content up
+            const imageData = actx.getImageData(0, cellSize, automataCanvas.width, height - cellSize);
+            actx.putImageData(imageData, 0, 0);
+            
+            // Clear bottom row
+            actx.fillStyle = '#F5E6D3';
+            actx.fillRect(0, height - cellSize, automataCanvas.width, cellSize);
+            
+            // Draw new generation at bottom
+            for (let i = 0; i < automataState.length; i++) {
+                if (automataState[i]) {
+                    // Color based on position for visual interest
+                    const hue = (i + automataGeneration) % 360;
+                    actx.fillStyle = `hsla(${30 + (hue % 30)}, 40%, 30%, 0.8)`;
+                    actx.fillRect(i * cellSize, height - cellSize, cellSize, cellSize);
+                }
+            }
+            
+            stepAutomata();
+        }
+
+        // ============================================
+        // NAVIGATION
+        // ============================================
+
+        const navTabs = document.querySelectorAll('.nav-tab');
+        const panels = document.querySelectorAll('.panel');
+
+        navTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetPanel = tab.dataset.panel;
+                
+                navTabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(targetPanel).classList.add('active');
+                
+                // Refresh content when switching panels
+                if (targetPanel === 'dashboard') updateDashboard();
+                if (targetPanel === 'library') renderLibrary();
+                if (targetPanel === 'session') renderBookSelector();
+                if (targetPanel === 'history') renderHistory();
+            });
+        });
+
+        // ============================================
+        // BOOK MANAGEMENT
+        // ============================================
+
+        document.getElementById('add-book-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const book = {
+                id: Date.now().toString(),
+                title: document.getElementById('book-title').value,
+                author: document.getElementById('book-author').value,
+                totalPages: parseInt(document.getElementById('book-pages').value) || null,
+                genre: document.getElementById('book-genre').value,
+                addedAt: new Date().toISOString(),
+                pagesRead: 0
+            };
+            
+            appData.books.push(book);
+            saveData(appData);
+            
+            // Reset form
+            e.target.reset();
+            
+            // Show confirmation
+            renderLibrary();
+            updateDashboard();
+        });
+
+        function renderLibrary() {
+            const grid = document.getElementById('library-grid');
+            
+            if (appData.books.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1/-1;">
+                        <div class="empty-state-icon">📚</div>
+                        <p class="empty-state-text">Your library awaits. Add your first book above.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            grid.innerHTML = appData.books.map(book => {
+                const sessions = appData.sessions.filter(s => s.bookId === book.id);
+                const totalPages = sessions.reduce((sum, s) => sum + s.pages, 0);
+                const totalMinutes = sessions.reduce((sum, s) => sum + s.duration, 0);
+                const progress = book.totalPages ? Math.min(100, (totalPages / book.totalPages) * 100) : 0;
+                
+                return `
+                    <div class="book-card" onclick="openBookModal('${book.id}')">
+                        <div class="book-title">${escapeHtml(book.title)}</div>
+                        <div class="book-author">${escapeHtml(book.author)}</div>
+                        <div class="book-stats">
+                            <span class="book-stat">📄 ${totalPages} pages</span>
+                            <span class="book-stat">⏱ ${Math.round(totalMinutes / 60)}h</span>
+                            <span class="book-stat">📝 ${sessions.length} sessions</span>
+                        </div>
+                        ${book.totalPages ? `
+                            <div class="book-progress">
+                                <div class="book-progress-fill" style="width: ${progress}%"></div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openBookModal(bookId) {
+            const book = appData.books.find(b => b.id === bookId);
+            if (!book) return;
+            
+            const sessions = appData.sessions.filter(s => s.bookId === bookId);
+            const totalPages = sessions.reduce((sum, s) => sum + s.pages, 0);
+            const totalMinutes = sessions.reduce((sum, s) => sum + s.duration, 0);
+            
+            document.getElementById('modal-book-title').textContent = book.title;
+            document.getElementById('modal-book-author').textContent = `by ${book.author}`;
+            
+            document.getElementById('modal-book-stats').innerHTML = `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">${totalPages}</div>
+                        <div class="stat-label">Pages Read</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${Math.round(totalMinutes / 60 * 10) / 10}</div>
+                        <div class="stat-label">Hours</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${sessions.length}</div>
+                        <div class="stat-label">Sessions</div>
+                    </div>
+                </div>
+            `;
+            
+            if (sessions.length > 0) {
+                document.getElementById('modal-book-sessions').innerHTML = `
+                    <h4 style="margin-bottom: 1rem;">Recent Sessions</h4>
+                    ${sessions.slice(-5).reverse().map(s => `
+                        <div style="padding: 0.5rem 0; border-bottom: 1px solid var(--travertine-light);">
+                            <span>${new Date(s.timestamp).toLocaleDateString()}</span> — 
+                            <span>${s.pages} pages</span> — 
+                            <span class="session-modality modality-${s.modality}">${s.modality}</span>
+                        </div>
+                    `).join('')}
+                `;
+            } else {
+                document.getElementById('modal-book-sessions').innerHTML = '<p style="color: var(--travertine);">No sessions logged yet.</p>';
+            }
+            
+            document.getElementById('delete-book-btn').onclick = () => deleteBook(bookId);
+            document.getElementById('book-modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('book-modal').classList.remove('active');
+        }
+
+        function deleteBook(bookId) {
+            if (!confirm('Remove this book and all its sessions from your library?')) return;
+            
+            appData.books = appData.books.filter(b => b.id !== bookId);
+            appData.sessions = appData.sessions.filter(s => s.bookId !== bookId);
+            saveData(appData);
+            
+            closeModal();
+            renderLibrary();
+            updateDashboard();
+        }
+
+        // ============================================
+        // SESSION LOGGING
+        // ============================================
+
+        function renderBookSelector() {
+            const selector = document.getElementById('book-selector');
+            
+            if (appData.books.length === 0) {
+                selector.innerHTML = `
+                    <div style="padding: 2rem; text-align: center; color: var(--travertine);">
+                        <p>Add books to your library first.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            selector.innerHTML = appData.books.map(book => `
+                <div class="book-selector-item" data-book-id="${book.id}" onclick="selectBook('${book.id}')">
+                    <strong>${escapeHtml(book.title)}</strong>
+                    <span style="color: var(--travertine);"> by ${escapeHtml(book.author)}</span>
+                </div>
+            `).join('');
+        }
+
+        function selectBook(bookId) {
+            document.querySelectorAll('.book-selector-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            document.querySelector(`[data-book-id="${bookId}"]`).classList.add('selected');
+            document.getElementById('session-book-id').value = bookId;
+        }
+
+        document.getElementById('session-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const bookId = document.getElementById('session-book-id').value;
+            if (!bookId) {
+                alert('Please select a book first.');
+                return;
+            }
+            
+            const modality = document.querySelector('input[name="modality"]:checked');
+            if (!modality) {
+                alert('Please select a reading modality.');
+                return;
+            }
+            
+            const session = {
+                id: Date.now().toString(),
+                bookId: bookId,
+                pages: parseInt(document.getElementById('session-pages').value),
+                duration: parseInt(document.getElementById('session-duration').value),
+                modality: modality.value,
+                attention: parseInt(document.getElementById('session-attention').value),
+                notes: document.getElementById('session-notes').value,
+                timestamp: new Date().toISOString()
+            };
+            
+            appData.sessions.push(session);
+            saveData(appData);
+            
+            // Reset form
+            e.target.reset();
+            document.querySelectorAll('.book-selector-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            document.getElementById('session-book-id').value = '';
+            
+            // Switch to dashboard
+            document.querySelector('[data-panel="dashboard"]').click();
+        });
+
+        // ============================================
+        // HISTORY
+        // ============================================
+
+        function renderHistory() {
+            const list = document.getElementById('session-list');
+            
+            if (appData.sessions.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📝</div>
+                        <p class="empty-state-text">No reading sessions logged yet. Begin your journey.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Sort by most recent first
+            const sortedSessions = [...appData.sessions].sort((a, b) => 
+                new Date(b.timestamp) - new Date(a.timestamp)
+            );
+            
+            list.innerHTML = sortedSessions.map(session => {
+                const book = appData.books.find(b => b.id === session.bookId);
+                const bookTitle = book ? book.title : 'Unknown Book';
+                const date = new Date(session.timestamp);
+                
+                return `
+                    <div class="session-item">
+                        <div>
+                            <div class="session-book">${escapeHtml(bookTitle)}</div>
+                            <div class="session-details">
+                                ${date.toLocaleDateString()} at ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                • ${session.pages} pages • ${session.duration} min
+                                • Attention: ${session.attention}%
+                            </div>
+                            ${session.notes ? `<div style="margin-top: 0.5rem; font-style: italic; color: var(--travertine);">"${escapeHtml(session.notes.substring(0, 100))}${session.notes.length > 100 ? '...' : ''}"</div>` : ''}
+                        </div>
+                        <span class="session-modality modality-${session.modality}">${session.modality}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ============================================
+        // DASHBOARD
+        // ============================================
+
+        function updateDashboard() {
+            // Basic stats
+            document.getElementById('stat-books').textContent = appData.books.length;
+            document.getElementById('stat-sessions').textContent = appData.sessions.length;
+            
+            const totalPages = appData.sessions.reduce((sum, s) => sum + s.pages, 0);
+            const totalMinutes = appData.sessions.reduce((sum, s) => sum + s.duration, 0);
+            
+            document.getElementById('stat-pages').textContent = totalPages.toLocaleString();
+            document.getElementById('stat-hours').textContent = Math.round(totalMinutes / 60);
+            
+            // Modality breakdown
+            const modalityCounts = { deep: 0, standard: 0, skim: 0, browse: 0 };
+            appData.sessions.forEach(s => {
+                modalityCounts[s.modality] = (modalityCounts[s.modality] || 0) + s.duration;
+            });
+            
+            const totalTime = Object.values(modalityCounts).reduce((a, b) => a + b, 0) || 1;
+            
+            document.getElementById('mod-deep').textContent = Math.round(modalityCounts.deep / totalTime * 100) + '%';
+            document.getElementById('mod-standard').textContent = Math.round(modalityCounts.standard / totalTime * 100) + '%';
+            document.getElementById('mod-skim').textContent = Math.round(modalityCounts.skim / totalTime * 100) + '%';
+            document.getElementById('mod-browse').textContent = Math.round(modalityCounts.browse / totalTime * 100) + '%';
+            
+            // Calculate Reading Brain Age
+            calculateBrainAge();
+            
+            // Render visualization
+            renderReadingViz();
+        }
+
+        function calculateBrainAge() {
+            const brainAgeEl = document.getElementById('brain-age');
+            const deltaEl = document.getElementById('brain-age-delta');
+            
+            if (appData.sessions.length < 3) {
+                brainAgeEl.textContent = '—';
+                deltaEl.innerHTML = '<span style="color: var(--travertine-light);">Log at least 3 sessions to calculate</span>';
+                return;
+            }
+            
+            // Factors that improve brain age:
+            // - More deep reading (positive)
+            // - Higher attention scores (positive)
+            // - Consistent reading (positive)
+            // - Variety of genres (positive)
+            // - More skim/browse (negative)
+            
+            let score = 0;
+            
+            // Modality weighting
+            const modalityWeights = { deep: 3, standard: 1, skim: -0.5, browse: -1 };
+            const weightedTime = appData.sessions.reduce((sum, s) => 
+                sum + (s.duration * (modalityWeights[s.modality] || 0)), 0
+            );
+            score += Math.min(20, weightedTime / 60); // Up to 20 points
+            
+            // Attention average
+            const avgAttention = appData.sessions.reduce((sum, s) => sum + s.attention, 0) / appData.sessions.length;
+            score += (avgAttention / 100) * 15; // Up to 15 points
+            
+            // Consistency (sessions per week over last month)
+            const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+            const recentSessions = appData.sessions.filter(s => new Date(s.timestamp) > thirtyDaysAgo);
+            const sessionsPerWeek = (recentSessions.length / 4.3);
+            score += Math.min(15, sessionsPerWeek * 3); // Up to 15 points
+            
+            // Genre variety
+            const genres = new Set(appData.books.map(b => b.genre));
+            score += Math.min(10, genres.size * 2); // Up to 10 points
+            
+            // Total pages (diminishing returns)
+            const totalPages = appData.sessions.reduce((sum, s) => sum + s.pages, 0);
+            score += Math.min(10, Math.log10(totalPages + 1) * 3); // Up to 10 points
+            
+            // Convert to "brain age" (lower is better, like golf)
+            // Base age 40, subtract improvements
+            const brainAge = Math.max(20, Math.round(45 - score * 0.5));
+            
+            brainAgeEl.textContent = brainAge;
+            
+            // Delta from chronological (assuming 35 as default)
+            const chronoAge = 35;
+            const delta = chronoAge - brainAge;
+            
+            if (delta > 0) {
+                deltaEl.innerHTML = `<span class="delta-positive">↑ ${delta} years younger than baseline</span>`;
+            } else if (delta < 0) {
+                deltaEl.innerHTML = `<span class="delta-negative">↓ ${Math.abs(delta)} years older than baseline</span>`;
+            } else {
+                deltaEl.innerHTML = '<span style="color: var(--travertine-light);">At baseline</span>';
+            }
+        }
+
+        function renderReadingViz() {
+            const canvas = document.getElementById('reading-viz');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size
+            canvas.width = canvas.offsetWidth * 2;
+            canvas.height = canvas.offsetHeight * 2;
+            ctx.scale(2, 2);
+            
+            const width = canvas.offsetWidth;
+            const height = canvas.offsetHeight;
+            
+            // Clear
+            ctx.fillStyle = '#2C1810';
+            ctx.fillRect(0, 0, width, height);
+            
+            // Get last 30 days of data
+            const days = 30;
+            const now = new Date();
+            const dayData = [];
+            
+            for (let i = days - 1; i >= 0; i--) {
+                const date = new Date(now);
+                date.setDate(date.getDate() - i);
+                const dateStr = date.toISOString().split('T')[0];
+                
+                const daySessions = appData.sessions.filter(s => 
+                    s.timestamp.split('T')[0] === dateStr
+                );
+                
+                dayData.push({
+                    date: date,
+                    pages: daySessions.reduce((sum, s) => sum + s.pages, 0),
+                    minutes: daySessions.reduce((sum, s) => sum + s.duration, 0),
+                    sessions: daySessions.length,
+                    modalities: daySessions.map(s => s.modality)
+                });
+            }
+            
+            const maxPages = Math.max(...dayData.map(d => d.pages), 1);
+            const barWidth = (width - 40) / days;
+            const padding = 20;
+            
+            // Draw bars
+            dayData.forEach((day, i) => {
+                const x = padding + i * barWidth;
+                const barHeight = (day.pages / maxPages) * (height - 40);
+                
+                // Color based on dominant modality
+                let color = '#8B7355'; // default travertine
+                if (day.modalities.includes('deep')) color = '#3D5C3A'; // verdigris
+                else if (day.modalities.includes('standard')) color = '#8B7355';
+                else if (day.modalities.includes('skim')) color = '#D4AF37'; // gold
+                else if (day.modalities.includes('browse')) color = '#8B0000'; // vermilion
+                
+                if (day.pages > 0) {
+                    ctx.fillStyle = color;
+                    ctx.fillRect(x + 2, height - padding - barHeight, barWidth - 4, barHeight);
+                    
+                    // Glow effect for high activity days
+                    if (day.pages > maxPages * 0.5) {
+                        ctx.shadowColor = '#D4AF37';
+                        ctx.shadowBlur = 10;
+                        ctx.fillRect(x + 2, height - padding - barHeight, barWidth - 4, barHeight);
+                        ctx.shadowBlur = 0;
+                    }
+                }
+                
+                // Day marker
+                if (i % 7 === 0) {
+                    ctx.fillStyle = '#C4A574';
+                    ctx.font = '10px Crimson Text';
+                    ctx.fillText(day.date.getDate(), x + barWidth/2 - 5, height - 5);
+                }
+            });
+            
+            // Y-axis label
+            ctx.fillStyle = '#C4A574';
+            ctx.font = '11px Crimson Text';
+            ctx.save();
+            ctx.translate(10, height/2);
+            ctx.rotate(-Math.PI/2);
+            ctx.fillText('Pages', 0, 0);
+            ctx.restore();
+        }
+
+        // ============================================
+        // UTILITIES
+        // ============================================
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Close modal on escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        // Close modal on overlay click
+        document.getElementById('book-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('book-modal')) closeModal();
+        });
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+
+        window.addEventListener('load', () => {
+            initAutomata();
+            initAutomataState();
+            
+            // Start automata animation
+            setInterval(renderAutomata, 100);
+            
+            // Initialize all panels
+            updateDashboard();
+            renderLibrary();
+            renderBookSelector();
+            renderHistory();
+        });
+
+        window.addEventListener('resize', () => {
+            initAutomata();
+            initAutomataState();
+            renderReadingViz();
+        });
+
+        // Export data function (for backup)
+        window.exportData = function() {
+            const dataStr = JSON.stringify(appData, null, 2);
+            const blob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'codex_neuralis_backup.json';
+            a.click();
+        };
+
+        // Import data function
+        window.importData = function(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    appData = JSON.parse(e.target.result);
+                    saveData(appData);
+                    updateDashboard();
+                    renderLibrary();
+                    renderBookSelector();
+                    renderHistory();
+                    alert('Data imported successfully!');
+                } catch (err) {
+                    alert('Error importing data: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+        };
+    </script>
+</body>
+</html>
