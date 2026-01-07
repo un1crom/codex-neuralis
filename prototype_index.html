@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain‑Health Book Recommendation Prototype</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f9f9fb;
+            color: #333;
+        }
+        h1 {
+            color: #4051b5;
+        }
+        .section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .section h2 {
+            margin-top: 0;
+            color: #4051b5;
+        }
+        label {
+            display: inline-block;
+            margin-top: 10px;
+            margin-bottom: 5px;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 1em;
+        }
+        button {
+            background-color: #4051b5;
+            color: #fff;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        button:disabled {
+            background-color: #9da4d0;
+            cursor: not-allowed;
+        }
+        #recommendation-list li, #reading-list li {
+            list-style: none;
+            margin-bottom: 8px;
+            padding: 8px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #canvas {
+            border: 1px solid #ccc;
+            width: 100%;
+            max-width: 500px;
+            height: 200px;
+            cursor: crosshair;
+        }
+        #summary span {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Brain‑Health Book Recommendation Prototype</h1>
+
+    <div class="section" id="profile-section">
+        <h2>Profile Setup</h2>
+        <label for="age">Age</label>
+        <input type="number" id="age" min="5" max="120" placeholder="Enter your age" />
+        <label for="genre">Preferred Genre</label>
+        <select id="genre">
+            <option value="all">-- Select --</option>
+            <option value="fiction">Fiction</option>
+            <option value="nonfiction">Non‑fiction</option>
+            <option value="mystery">Mystery</option>
+            <option value="science">Science</option>
+            <option value="poetry">Poetry</option>
+        </select>
+        <button id="save-profile">Save Profile</button>
+    </div>
+
+    <div class="section" id="recommendations">
+        <h2>Book Recommendations</h2>
+        <ul id="recommendation-list"></ul>
+    </div>
+
+    <div class="section" id="reading-list-section">
+        <h2>Your Reading List</h2>
+        <ul id="reading-list"></ul>
+    </div>
+
+    <div class="section" id="notes-section">
+        <h2>Notes & Drawing</h2>
+        <textarea id="notes" rows="5" placeholder="Write your thoughts..."></textarea>
+        <canvas id="canvas"></canvas>
+        <button id="save-notes">Save Notes</button>
+    </div>
+
+    <div class="section" id="summary-section">
+        <h2>Summary</h2>
+        <div id="summary">
+            <span id="books-read">Books completed: 0</span>
+            <span id="reading-time">Total reading time: 0 minutes</span>
+        </div>
+    </div>
+
+    <script>
+        // Sample books dataset
+        const books = [
+            {
+                id: 'book1',
+                title: 'The Empathy Quest',
+                author: 'Jane Storyteller',
+                genre: 'fiction',
+                description: 'An immersive novel that transports readers into a world of kindness and complexity.'
+            },
+            {
+                id: 'book2',
+                title: 'Brain Science 101',
+                author: 'Dr. Neuro',
+                genre: 'science',
+                description: 'A non‑fiction introduction to how your brain learns and adapts.'
+            },
+            {
+                id: 'book3',
+                title: 'Mystery of the Mind',
+                author: 'M. Investigator',
+                genre: 'mystery',
+                description: 'A cognitive puzzle wrapped in a whodunit to stimulate executive function.'
+            },
+            {
+                id: 'book4',
+                title: 'Poems for Reflection',
+                author: 'Ella Wordsworth',
+                genre: 'poetry',
+                description: 'A collection of poetry to enrich language and emotional depth.'
+            }
+        ];
+
+        // Local storage keys
+        const PROFILE_KEY = 'bh_profile';
+        const READING_LIST_KEY = 'bh_reading_list';
+        const NOTES_KEY = 'bh_notes';
+        const DRAWING_KEY = 'bh_drawing';
+        const METRICS_KEY = 'bh_metrics';
+
+        // Load data from localStorage
+        function loadData(key, defaultValue) {
+            const data = localStorage.getItem(key);
+            return data ? JSON.parse(data) : defaultValue;
+        }
+        function saveData(key, value) {
+            localStorage.setItem(key, JSON.stringify(value));
+        }
+
+        // Profile
+        const ageInput = document.getElementById('age');
+        const genreSelect = document.getElementById('genre');
+        const saveProfileBtn = document.getElementById('save-profile');
+
+        function loadProfile() {
+            const profile = loadData(PROFILE_KEY, {});
+            if (profile.age) ageInput.value = profile.age;
+            if (profile.genre) genreSelect.value = profile.genre;
+        }
+        function saveProfile() {
+            const profile = {
+                age: ageInput.value,
+                genre: genreSelect.value
+            };
+            saveData(PROFILE_KEY, profile);
+            renderRecommendations();
+            alert('Profile saved. Recommendations updated.');
+        }
+        saveProfileBtn.addEventListener('click', saveProfile);
+
+        // Recommendations
+        const recommendationList = document.getElementById('recommendation-list');
+        function renderRecommendations() {
+            recommendationList.innerHTML = '';
+            const profile = loadData(PROFILE_KEY, {});
+            const preferredGenre = profile.genre || 'all';
+            const filteredBooks = books.filter(book => preferredGenre === 'all' || book.genre === preferredGenre);
+            filteredBooks.forEach(book => {
+                const li = document.createElement('li');
+                const infoDiv = document.createElement('div');
+                infoDiv.style.flexGrow = '1';
+                infoDiv.innerHTML = `<strong>${book.title}</strong> <em>by ${book.author}</em><br><small>${book.description}</small>`;
+                const addButton = document.createElement('button');
+                addButton.textContent = 'Add';
+                addButton.addEventListener('click', () => addToReadingList(book));
+                li.appendChild(infoDiv);
+                li.appendChild(addButton);
+                recommendationList.appendChild(li);
+            });
+        }
+
+        // Reading list
+        const readingListUl = document.getElementById('reading-list');
+        function loadReadingList() {
+            return loadData(READING_LIST_KEY, []);
+        }
+        function saveReadingList(list) {
+            saveData(READING_LIST_KEY, list);
+        }
+        function addToReadingList(book) {
+            const list = loadReadingList();
+            // avoid duplicates
+            if (!list.find(item => item.id === book.id)) {
+                list.push({ ...book, status: 'not-started', startTime: null, endTime: null, duration: 0 });
+                saveReadingList(list);
+                renderReadingList();
+            }
+        }
+        function renderReadingList() {
+            readingListUl.innerHTML = '';
+            const list = loadReadingList();
+            list.forEach(item => {
+                const li = document.createElement('li');
+                const infoDiv = document.createElement('div');
+                infoDiv.style.flexGrow = '1';
+                infoDiv.innerHTML = `<strong>${item.title}</strong><br><small>Status: ${item.status}</small>`;
+                const actionButton = document.createElement('button');
+                if (item.status === 'not-started') {
+                    actionButton.textContent = 'Start reading';
+                    actionButton.addEventListener('click', () => startReading(item.id));
+                } else if (item.status === 'reading') {
+                    actionButton.textContent = 'Finish reading';
+                    actionButton.addEventListener('click', () => finishReading(item.id));
+                } else {
+                    actionButton.textContent = 'Completed';
+                    actionButton.disabled = true;
+                }
+                li.appendChild(infoDiv);
+                li.appendChild(actionButton);
+                readingListUl.appendChild(li);
+            });
+            updateSummary();
+        }
+        function startReading(bookId) {
+            const list = loadReadingList();
+            const item = list.find(b => b.id === bookId);
+            if (item) {
+                item.status = 'reading';
+                item.startTime = Date.now();
+                saveReadingList(list);
+                renderReadingList();
+            }
+        }
+        function finishReading(bookId) {
+            const list = loadReadingList();
+            const item = list.find(b => b.id === bookId);
+            if (item && item.status === 'reading') {
+                item.status = 'completed';
+                item.endTime = Date.now();
+                const durationMs = item.endTime - item.startTime;
+                item.duration = Math.round(durationMs / 60000); // minutes
+                // update metrics
+                const metrics = loadData(METRICS_KEY, { booksRead: 0, totalMinutes: 0 });
+                metrics.booksRead += 1;
+                metrics.totalMinutes += item.duration;
+                saveData(METRICS_KEY, metrics);
+                saveReadingList(list);
+                renderReadingList();
+            }
+        }
+
+        // Notes and drawing
+        const notesTextarea = document.getElementById('notes');
+        const saveNotesBtn = document.getElementById('save-notes');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let drawing = false;
+        function loadNotes() {
+            const notes = loadData(NOTES_KEY, '');
+            notesTextarea.value = notes;
+            const drawingData = loadData(DRAWING_KEY, null);
+            if (drawingData) {
+                const img = new Image();
+                img.onload = () => ctx.drawImage(img, 0, 0);
+                img.src = drawingData;
+            }
+        }
+        canvas.addEventListener('mousedown', e => {
+            drawing = true;
+            ctx.beginPath();
+            ctx.moveTo(e.offsetX, e.offsetY);
+        });
+        canvas.addEventListener('mousemove', e => {
+            if (drawing) {
+                ctx.lineTo(e.offsetX, e.offsetY);
+                ctx.strokeStyle = '#4051b5';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        });
+        canvas.addEventListener('mouseup', () => {
+            drawing = false;
+        });
+        canvas.addEventListener('mouseleave', () => {
+            drawing = false;
+        });
+        function saveNotes() {
+            saveData(NOTES_KEY, notesTextarea.value);
+            const imgData = canvas.toDataURL();
+            saveData(DRAWING_KEY, imgData);
+            alert('Notes saved!');
+        }
+        saveNotesBtn.addEventListener('click', saveNotes);
+
+        // Summary
+        const booksReadSpan = document.getElementById('books-read');
+        const readingTimeSpan = document.getElementById('reading-time');
+        function updateSummary() {
+            const metrics = loadData(METRICS_KEY, { booksRead: 0, totalMinutes: 0 });
+            booksReadSpan.textContent = `Books completed: ${metrics.booksRead}`;
+            readingTimeSpan.textContent = `Total reading time: ${metrics.totalMinutes} minutes`;
+        }
+
+        // Initialisation
+        function init() {
+            loadProfile();
+            renderRecommendations();
+            renderReadingList();
+            loadNotes();
+        }
+        init();
+    </script>
+</body>
+</html>
