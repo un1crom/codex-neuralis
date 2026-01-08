@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Codex Neuralis</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Crimson+Text:ital@0;1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="src/styles.css">
+</head>
+<body>
+    <canvas id="automata-border"></canvas>
+    <div id="app" class="codex-container">
+        <div id="loading-view" class="panel active">
+            <div class="codex-header">
+                <h1 class="codex-title">Codex Neuralis</h1>
+                <p class="codex-subtitle">Initializing...</p>
+            </div>
+        </div>
+        <div id="onboarding-view" class="panel"></div>
+        <div id="main-app" class="panel">
+            <header class="codex-header">
+                <h1 class="codex-title">Codex Neuralis</h1>
+                <p class="codex-subtitle">A Computational Instrument for Reading Brain Cultivation</p>
+            </header>
+            <nav class="codex-nav" id="main-nav">
+                <button class="nav-tab active" data-view="dashboard">Dashboard</button>
+                <button class="nav-tab" data-view="library">Library</button>
+                <button class="nav-tab" data-view="session">Log Session</button>
+                <button class="nav-tab" data-view="reader">Reader</button>
+                <button class="nav-tab" data-view="history">History</button>
+            </nav>
+            <main id="view-container">
+                <section id="dashboard-view" class="panel active"></section>
+                <section id="library-view" class="panel"></section>
+                <section id="session-view" class="panel"></section>
+                <section id="reader-view" class="panel"></section>
+                <section id="history-view" class="panel"></section>
+            </main>
+            <footer class="codex-footer">
+                <p class="footer-quote">"The screen is both window and mirror."</p>
+                <p class="footer-attribution">— Vilém Flusser</p>
+            </footer>
+        </div>
+    </div>
+    <div id="modal-container"></div>
+    <div id="toast-container"></div>
+    <script type="module" src="src/app.js"></script>
+</body>
+</html>
