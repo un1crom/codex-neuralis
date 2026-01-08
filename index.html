@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Codex Neuralis</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Crimson+Text:ital@0;1&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --burnt-umber: #2C1810;
+            --travertine: #8B7355;
+            --travertine-light: #C4A574;
+            --gold-leaf: #D4AF37;
+            --vermilion: #8B0000;
+            --verdigris: #3D5C3A;
+            --parchment: #F5E6D3;
+            --parchment-dark: #E8D4BC;
+            --ink: #1a1a1a;
+            --shadow: rgba(44, 24, 16, 0.3);
+            --glow: rgba(212, 175, 55, 0.15);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Crimson Text', Georgia, serif;
+            background: var(--parchment);
+            color: var(--burnt-umber);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Cellular Automata Background */
+        #automata-bg {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.08;
+        }
+
+        /* Screen Management */
+        .screen {
+            display: none;
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+        }
+        .screen.active { display: block; }
+
+        /* Welcome Screen */
+        .welcome-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .welcome-title {
+            font-family: 'Cormorant Garamond', Garamond, serif;
+            font-size: clamp(3rem, 8vw, 5rem);
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--burnt-umber);
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px var(--shadow);
+        }
+
+        .welcome-subtitle {
+            font-family: 'IM Fell English', Georgia, serif;
+            font-style: italic;
+            font-size: 1.3rem;
+            color: var(--travertine);
+            margin-bottom: 3rem;
+            max-width: 500px;
+        }
+
+        .welcome-quote {
+            font-family: 'IM Fell English', serif;
+            font-style: italic;
+            font-size: 1.1rem;
+            color: var(--travertine);
+            max-width: 600px;
+            margin-bottom: 3rem;
+            padding: 1.5rem;
+            border-left: 3px solid var(--gold-leaf);
+            background: var(--glow);
+        }
+
+        .btn {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+            padding: 1rem 3rem;
+            border: none;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: var(--burnt-umber);
+            color: var(--parchment);
+        }
+        .btn-primary:hover {
+            background: var(--gold-leaf);
+            color: var(--burnt-umber);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--burnt-umber);
+            border: 2px solid var(--burnt-umber);
+        }
+        .btn-secondary:hover {
+            background: var(--burnt-umber);
+            color: var(--parchment);
+        }
+
+        /* Onboarding Container */
+        .onboarding-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .onboarding-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .onboarding-step {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: var(--gold-leaf);
+            margin-bottom: 0.5rem;
+        }
+
+        .onboarding-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: var(--burnt-umber);
+        }
+
+        .onboarding-desc {
+            font-family: 'IM Fell English', serif;
+            font-style: italic;
+            color: var(--travertine);
+            margin-top: 0.5rem;
+        }
+
+        /* Reading Exercise */
+        .reading-passage {
+            background: linear-gradient(135deg, var(--parchment) 0%, var(--parchment-dark) 100%);
+            border: 1px solid var(--travertine-light);
+            padding: 2.5rem;
+            margin: 2rem 0;
+            font-size: 1.15rem;
+            line-height: 1.9;
+            position: relative;
+            box-shadow: 4px 4px 12px var(--shadow);
+        }
+
+        .reading-passage::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--burnt-umber), var(--gold-leaf), var(--burnt-umber));
+        }
+
+        .reading-passage p {
+            margin-bottom: 1.2rem;
+            text-indent: 2rem;
+        }
+        .reading-passage p:first-child {
+            text-indent: 0;
+        }
+        .reading-passage p:first-child::first-letter {
+            font-size: 3.5rem;
+            float: left;
+            line-height: 1;
+            padding-right: 0.5rem;
+            font-family: 'Cormorant Garamond', serif;
+            color: var(--gold-leaf);
+        }
+
+        .reading-timer {
+            text-align: center;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            color: var(--travertine);
+            margin-bottom: 1rem;
+        }
+
+        .reading-controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        /* Progress Indicator */
+        .progress-bar {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .progress-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--travertine-light);
+            transition: all 0.3s ease;
+        }
+        .progress-dot.active {
+            background: var(--gold-leaf);
+            box-shadow: 0 0 8px var(--gold-leaf);
+        }
+        .progress-dot.completed {
+            background: var(--verdigris);
+        }
+
+        /* Hidden utility */
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <canvas id="automata-bg"></canvas>
+
+    <!-- Screen 1: Welcome -->
+    <div id="welcome-screen" class="screen active">
+        <div class="welcome-screen">
+            <h1 class="welcome-title">Codex Neuralis</h1>
+            <p class="welcome-subtitle">A Computational Instrument for Reading Brain Cultivation</p>
+            <blockquote class="welcome-quote">
+                "The reading brain is not fixed—it is computationally plastic. Each reading modality physically reorganizes neural circuitry."
+            </blockquote>
+            <button class="btn btn-primary" onclick="startOnboarding()">Begin Your Journey</button>
+        </div>
+    </div>
+
+    <!-- Screen 2: Reading Exercise -->
+    <div id="reading-exercise-screen" class="screen">
+        <div class="onboarding-container">
+            <div class="progress-bar">
+                <div class="progress-dot active"></div>
+                <div class="progress-dot"></div>
+                <div class="progress-dot"></div>
+                <div class="progress-dot"></div>
+            </div>
+
+            <div class="onboarding-header">
+                <div class="onboarding-step">Step 1 of 4</div>
+                <h2 class="onboarding-title">The Reading Calibration</h2>
+                <p class="onboarding-desc">Read the following passage at your natural pace. We will measure your reading rhythm.</p>
+            </div>
+
+            <div class="reading-timer" id="reading-timer">Ready when you are</div>
+
+            <div class="reading-passage" id="calibration-passage">
+                <p>In the autumn of 1890, William James published his monumental work that would forever change our understanding of the mind. He wrote of consciousness as a stream—not a chain of discrete links, but a continuous flow of thought and sensation, each moment bleeding into the next like watercolors on wet paper.</p>
+                <p>The brain, James understood, was not a fixed machine but a living organ capable of remarkable transformation. What we attend to shapes what we become. The neural pathways we exercise grow stronger; those we neglect wither like unused muscles. This principle—now confirmed by modern neuroscience—suggests that every act of reading physically sculpts the architecture of thought.</p>
+                <p>Consider what happens when you encounter these words. Light strikes your retina, triggering cascades of electrical signals. Your visual cortex recognizes patterns—letters assembling into words, words into meaning. But something more profound occurs: you simulate. You construct mental models, hear an inner voice, perhaps even feel the weight of James's Victorian study around you.</p>
+                <p>This is the miracle of reading: black marks on a surface can transport consciousness across time and space, can plant seeds of thought that bloom into entirely new ways of seeing the world.</p>
+            </div>
+
+            <div class="reading-controls">
+                <button class="btn btn-secondary" id="start-reading-btn" onclick="startReading()">Start Reading</button>
+                <button class="btn btn-primary hidden" id="finish-reading-btn" onclick="finishReading()">I've Finished</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CODEX NEURALIS - V1
+        // ============================================
+
+        const STORAGE_KEY = 'codex_neuralis_v1';
+
+        // App State
+        let appState = {
+            onboardingComplete: false,
+            profile: null,
+            books: [],
+            sessions: [],
+            calibration: null
+        };
+
+        // Load/Save
+        function loadState() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                appState = JSON.parse(saved);
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+        }
+
+        // Screen Navigation
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        // Onboarding
+        function startOnboarding() {
+            showScreen('reading-exercise-screen');
+        }
+
+        // Reading Exercise
+        let readingStartTime = null;
+
+        function startReading() {
+            readingStartTime = Date.now();
+            document.getElementById('start-reading-btn').classList.add('hidden');
+            document.getElementById('finish-reading-btn').classList.remove('hidden');
+            updateTimer();
+        }
+
+        function updateTimer() {
+            if (!readingStartTime) return;
+            const elapsed = Math.floor((Date.now() - readingStartTime) / 1000);
+            const mins = Math.floor(elapsed / 60);
+            const secs = elapsed % 60;
+            document.getElementById('reading-timer').textContent =
+                `${mins}:${secs.toString().padStart(2, '0')} elapsed`;
+            requestAnimationFrame(updateTimer);
+        }
+
+        function finishReading() {
+            const elapsed = (Date.now() - readingStartTime) / 1000;
+            const wordCount = 280; // Approximate words in passage
+            const wpm = Math.round((wordCount / elapsed) * 60);
+
+            appState.calibration = {
+                readingTime: elapsed,
+                wordsPerMinute: wpm,
+                timestamp: new Date().toISOString()
+            };
+            saveState();
+
+            // TODO: Move to comprehension questions
+            alert(`Reading complete!\nTime: ${Math.round(elapsed)}s\nSpeed: ${wpm} WPM\n\n(Comprehension questions coming next)`);
+        }
+
+        // Cellular Automata Background
+        const canvas = document.getElementById('automata-bg');
+        const ctx = canvas.getContext('2d');
+        let automataState = [];
+
+        function initAutomata() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const width = Math.ceil(canvas.width / 4);
+            automataState = new Array(width).fill(0);
+            automataState[Math.floor(width / 2)] = 1;
+            for (let i = 0; i < width; i++) {
+                if (Math.random() < 0.01) automataState[i] = 1;
+            }
+        }
+
+        function rule110(l, c, r) {
+            const pattern = (l << 2) | (c << 1) | r;
+            return (110 >> pattern) & 1;
+        }
+
+        function stepAutomata() {
+            const width = automataState.length;
+            const newState = new Array(width).fill(0);
+            for (let i = 0; i < width; i++) {
+                const l = automataState[(i - 1 + width) % width];
+                const c = automataState[i];
+                const r = automataState[(i + 1) % width];
+                newState[i] = rule110(l, c, r);
+            }
+            automataState = newState;
+        }
+
+        function renderAutomata() {
+            const cellSize = 4;
+            const imageData = ctx.getImageData(0, cellSize, canvas.width, canvas.height - cellSize);
+            ctx.putImageData(imageData, 0, 0);
+            ctx.fillStyle = '#F5E6D3';
+            ctx.fillRect(0, canvas.height - cellSize, canvas.width, cellSize);
+            for (let i = 0; i < automataState.length; i++) {
+                if (automataState[i]) {
+                    ctx.fillStyle = '#2C1810';
+                    ctx.fillRect(i * cellSize, canvas.height - cellSize, cellSize, cellSize);
+                }
+            }
+            stepAutomata();
+        }
+
+        // Initialize
+        window.addEventListener('load', () => {
+            loadState();
+            initAutomata();
+            setInterval(renderAutomata, 100);
+
+            // Skip to main app if onboarding complete
+            if (appState.onboardingComplete) {
+                // TODO: showScreen('main-app');
+            }
+        });
+
+        window.addEventListener('resize', initAutomata);
+    </script>
+</body>
+</html>
